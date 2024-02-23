@@ -84,39 +84,36 @@ public:
     }
 
     void generate_direct_signal() {      
-        std::lock_guard<std::mutex> lock(m);
-        for (int times = 0 ; times < 1; times ++) {               
-            for (auto i = seq.begin(); i != seq.end(); ++i ) { 
-                gpiod_line_set_value(line_a, i->first);
-                gpiod_line_set_value(line_b, i->second);            
-                std::this_thread::sleep_for(std::chrono::microseconds(DURATION_US));
-            } 
-        }        
+        std::lock_guard<std::mutex> lock(m);      
+        auto it = seq[seq_step % seq.size()];        
+        gpiod_line_set_value(line_a, it.first);
+        gpiod_line_set_value(line_b, it.second);            
+        std::this_thread::sleep_for(std::chrono::microseconds(DURATION_US));
+        seq_step++;
     }
 
     void generate_reverse_signal() {      
         std::lock_guard<std::mutex> lock(m);
-        for (int times = 0 ; times < 1; times ++) {
-            for (auto i = seq.rbegin(); i != seq.rend(); ++i ) { 
-                gpiod_line_set_value(line_a, i->first);
-                gpiod_line_set_value(line_b, i->second);            
-                std::this_thread::sleep_for(std::chrono::microseconds(DURATION_US));
-            }
-        }         
+        auto it = seq[seq_step % seq.size()];        
+        gpiod_line_set_value(line_a, it.first);
+        gpiod_line_set_value(line_b, it.second);            
+        std::this_thread::sleep_for(std::chrono::microseconds(DURATION_US));
+        seq_step--;
     }
 
     struct gpiod_chip *chip;
     struct gpiod_line *line_a;
     struct gpiod_line *line_b;
+    int seq_step;
     std::mutex m;
 };
 
 
 int main() {
-    BufferToggle bt;
-    bt.off();                           // Do not wait for "enter" key
+    // BufferToggle bt;
+    // bt.off();                           // Do not wait for "enter" key
 
-    std::vector<std::thread> workers;
+    // std::vector<std::thread> workers;
 
     encoder enc_x(21, 26);
     encoder enc_y(20, 19);
@@ -155,15 +152,6 @@ int main() {
             }
         }
         z_old = z & 1;
-        // std::cout << "X dir: " << (x & (1 << 1)) << "step: " << (x & (1 << 0));
-        // std::cout << "Y dir: " << (y & (1 << 1)) << "step: " << (y & (1 << 0));
-        // std::cout << "Z dir: " << (z & (1 << 1)) << "step: " << (z & (1 << 0)) << "\n";
-       
-        //char c = std::getchar();
-        // std::cout << "Y:";
-        // mot_y.read();
-        // std::cout << "Z:";
-        // mot_z.read();
     }
     
     // while (char c = std::getchar()) {
@@ -197,9 +185,9 @@ int main() {
     //     }
     // }
     
-    for(auto &w: workers) {
-        w.join();
-    }
+    // for(auto &w: workers) {
+    //     w.join();
+    // }
 
-    bt.on();   
+    // bt.on();   
 }
