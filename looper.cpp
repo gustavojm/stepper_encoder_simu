@@ -9,7 +9,7 @@
 
 #include "buffer_toggle.h"
 
-#define DURATION_US 100 // Adjust the duration based on your requirements
+#define DURATION_US 1 // Adjust the duration based on your requirements
 
 class motor_driver {
 public:
@@ -43,7 +43,6 @@ public:
         //std::cout << "dir " << dir << " step " << step << "\n";
         return dir << 1 | step;
     }
-
 
     struct gpiod_chip *chip;
     struct gpiod_line *line_dir;
@@ -123,12 +122,16 @@ int main() {
     motor_driver mot_y(22, 10);
     motor_driver mot_z(9, 11);
 
+    // while (true) {
+    //     enc_x.generate_direct_signal();
+    // }
+    
     while (true) {
         static int x_old = 0, y_old = 0, z_old = 0;
         static int count_half_steps_x = 0, count_half_steps_y = 0, count_half_steps_z = 0;
         int x = mot_x.read();
         if (x & 1 != x_old) {            
-            count_half_steps_x ++;
+            count_half_steps_x++;
             if (! (count_half_steps_x % 2)) {
                 (x & 2) ? enc_x.generate_reverse_signal() : enc_x.generate_direct_signal();
             }
@@ -137,18 +140,18 @@ int main() {
         
         int y = mot_y.read();
         if (y & 1 != y_old) {
-            count_half_steps_y ++;
+            count_half_steps_y++;
             if (! (count_half_steps_y % 2)) {
-                (y & 2) ? enc_y.generate_direct_signal() : enc_y.generate_reverse_signal();
+                (y & 2) ? enc_y.generate_reverse_signal() : enc_y.generate_direct_signal();
             }
         }
         y_old = y & 1;
 
         int z = mot_z.read();
         if (z & 1 != z_old) {
-            count_half_steps_z ++;
-            if (! (count_half_steps_x % 2)) {
-                (z & 2) ? enc_z.generate_direct_signal() : enc_z.generate_reverse_signal();
+            count_half_steps_z++;
+            if (! (count_half_steps_z % 2)) {
+                (z & 2) ? enc_z.generate_reverse_signal() : enc_z.generate_direct_signal();
             }
         }
         z_old = z & 1;
